@@ -1,192 +1,151 @@
 #[macro_use]
-extern crate clap;
-#[macro_use]
 extern crate lazy_static;
+extern crate regex;
 
-use clap::{App, Arg};
-use std::collections::HashSet;
-use std::ffi::{OsStr, OsString};
-use std::fs;
+use regex::Regex;
+
+use std::collections::{HashMap, HashSet};
 use std::iter::FromIterator;
-use std::path::Path;
-
-static WORDS_PATH: &str = "src/assets/words.txt";
-
-static OPT_NAME_FILES: &str = "FILES";
 
 lazy_static! {
-    static ref LETTERS: Vec<String> = vec![
-        "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r",
-        "s", "t", "u", "v", "w", "x", "y", "z",
-    ]
-    .into_iter()
-    .map(String::from)
-    .collect();
+    static ref ENG_ALPHABET: Vec<String> = "abcdefghijklmnopqrstuvwxyz"
+        .split("")
+        .filter(|l| l.len() > 0)
+        .map(String::from)
+        .collect();
 }
 
-pub fn run() {
-    let opt_files = Arg::with_name(OPT_NAME_FILES)
-        .help("Files to analyze")
-        .required(true)
-        .multiple(true)
-        .validator_os(exists_on_filesystem)
-        .index(1);
-
-    let matches = App::new("stava")
-        .version(crate_version!())
-        .author(crate_authors!())
-        .about(crate_description!())
-        .arg(opt_files)
-        .get_matches();
-
-    if let Some(files) = matches.values_of(OPT_NAME_FILES) {
-        let paths: Vec<&Path> = files.map(|file| Path::new(file)).collect::<Vec<&Path>>();
-        println!("Got: {:?}", paths);
-    }
+pub struct Stava {
+    // The words from the input with the frequency count for each word
+    pub words_w_count: HashMap<String, u32>,
 }
 
-fn get_dictionary() -> String {
-    fs::read_to_string(WORDS_PATH)
-        .expect("Something went wrong reading the file")
-        .to_lowercase()
-        .replace("\\-", " ")
-        .replace("\n", " ")
-        .replace("\t", " ")
-}
-
-fn strip_special_chars(string: &mut String) {
-    string.retain(|c| !r#"!\"\"\\\/(),".;:"[]*#?_+="#.contains(c));
-}
-
-fn exists_on_filesystem(path: &OsStr) -> Result<(), OsString> {
-    match path.to_str() {
-        None => Err(OsString::from("Could not convert input file path -> str")),
-        Some(p) => {
-            if Path::new(p).exists() {
-                return Ok(());
-            }
-            Err(OsString::from(format!(
-                "File not found [{}]",
-                path.to_str().unwrap()
-            )))
+impl Stava {
+    pub fn learn(&mut self, text: &str) {
+        let mut words_with_count: HashMap<String, u32> = HashMap::new();
+        let re = Regex::new(r"[a-z]+").unwrap();
+        for m in re.find_iter(&text.to_lowercase()) {
+            let count = words_with_count.entry(m.as_str().to_string()).or_insert(0);
+            *count += 1;
         }
+
+        self.words_w_count = words_with_count
     }
+
+    pub fn correct(&mut self, word: &str) -> String {
+        // Word is known so we return it
+        if self.words_w_count.contains_key(word) {
+            return word.to_string();
+        }
+
+        let mut candidates: HashMap<u32, String> = HashMap::new();
+        let edits = get_edits(word.to_string());
+
+        // Add edited words as candidates
+        for edit in &edits {
+            if let Some(count) = self.words_w_count.get(edit) {
+                candidates.insert(*count, edit.to_string());
+            }
+        }
+
+        // Return candidate if found in edits
+        if let Some(candidate) = candidates.iter().max_by_key(|&entry| entry.0) {
+            return candidate.1.to_string();
+        }
+
+        // Add additional edits based on first edited words
+        for edit in &edits {
+            for word in get_edits(edit.to_string()) {
+                if let Some(count) = self.words_w_count.get(&word) {
+                    candidates.insert(*count, word);
+                }
+            }
+        }
+
+        // Return candidate if found in edits
+        if let Some(candidate) = candidates.iter().max_by_key(|&entry| entry.0) {
+            return candidate.1.to_string();
+        }
+
+        // No correction was found - return input word
+        word.to_string()
+    }
+}
+
+fn get_edits(word: String) -> HashSet<String> {
+    let splits = splits(word);
+    HashSet::from_iter(
+        [
+            deletes(splits.clone()),
+            transposes(splits.clone()),
+            replaces(splits.clone()),
+            inserts(splits.clone()),
+        ]
+        .concat()
+        .iter()
+        .cloned(),
+    )
 }
 
 fn splits(word: String) -> Vec<(String, String)> {
-    let mut result = vec![];
-    let range = 0..(word.len() + 1);
+    let mut result = Vec::with_capacity(word.len() + 1);
+    let range = 0..result.capacity();
     for i in range {
         let left = String::from(&word[..i]);
         let right = String::from(&word[i..]);
-        let tuple = (left, right);
-        result.push(tuple);
+        result.push((left, right));
     }
     result
 }
 
 fn deletes(words: Vec<(String, String)>) -> Vec<String> {
-    let mut result = vec![];
-    words.iter().for_each(|word| {
-        let (left, right) = word;
+    let mut result = Vec::with_capacity(words.len() - 1);
+    for (left, right) in words {
         if !right.is_empty() {
-            result.push(String::from(left) + &right[1..]);
+            result.push([left.to_owned(), right[1..].to_string()].concat());
         }
-    });
+    }
     result
 }
 
 fn transposes(words: Vec<(String, String)>) -> Vec<String> {
-    let mut result = vec![];
-    words.iter().for_each(|word| {
-        let (left, right) = word;
+    let mut result = Vec::with_capacity(words.len() - 2);
+    for (left, right) in words {
         if right.len() > 1 {
-            let right1 = right.chars().nth(1).unwrap();
-            let right2 = right.chars().nth(0).unwrap();
-            let right3 = &right[2..];
             result.push(
-                String::from(left)
-                    + right1.to_string().as_str()
-                    + right2.to_string().as_str()
-                    + right3,
+                [
+                    left.to_owned(),
+                    right.chars().nth(1).unwrap().to_string(),
+                    right.chars().nth(0).unwrap().to_string(),
+                    right[2..].to_string(),
+                ]
+                .concat(),
             );
         }
-    });
+    }
     result
 }
 
 fn replaces(words: Vec<(String, String)>) -> Vec<String> {
-    let mut result = vec![];
-    words.iter().for_each(|word| {
-        let (left, right) = word;
+    let mut result = Vec::new();
+    for (left, right) in words {
         if !right.is_empty() {
-            LETTERS.iter().for_each(|letter| {
-                let right1 = &right[1..];
-                result.push(String::from(left) + letter + right1);
-            })
+            for letter in ENG_ALPHABET.iter() {
+                result.push([left.to_owned(), letter.to_string(), right[1..].to_string()].concat());
+            }
         }
-    });
+    }
     result
 }
 
 fn inserts(words: Vec<(String, String)>) -> Vec<String> {
-    let mut result = vec![];
-    words.iter().for_each(|word| {
-        let (left, right) = word;
-        LETTERS.iter().for_each(|letter| {
-            result.push(String::from(left) + letter + right);
-        })
-    });
-    result
-}
-
-fn edits1(word: String) -> HashSet<String> {
-    let splits = splits(word);
-    let deletes = deletes(splits.clone());
-    let transposes = transposes(splits.clone());
-    let replaces = replaces(splits.clone());
-    let inserts = inserts(splits.clone());
-    let all_words: Vec<String> = [deletes, transposes, replaces, inserts].concat();
-
-    HashSet::from_iter(all_words.iter().cloned())
-}
-
-fn edits2(word: String) -> HashSet<String> {
-    let mut result = HashSet::new();
-    let e1 = edits1(word);
-    e1.iter().for_each(|word| {
-        result.extend(edits1(String::from(word)));
-    });
-
-    result
-}
-
-fn find_corrected_word(word: String) -> String {
-    let mut dict_str = get_dictionary();
-
-    strip_special_chars(&mut dict_str);
-
-    let dictionary: HashSet<&str> = dict_str.split_whitespace().collect();
-    let known_word = dictionary.get(word.as_str());
-
-    match known_word {
-        Some(word) => word.to_string(),
-        None => {
-            let e1_set = edits1(word.clone());
-            let e1_word = e1_set
-                .iter()
-                .find(|word| dictionary.get(word.as_str()).is_some());
-
-            match e1_word {
-                None => edits2(word.clone())
-                    .iter()
-                    .find(|word| dictionary.get(word.as_str()).is_some())
-                    .unwrap_or(&word.clone())
-                    .to_string(),
-                Some(word) => word.to_owned(),
-            }
+    let mut result = Vec::new();
+    for (left, right) in words {
+        for letter in ENG_ALPHABET.iter() {
+            result.push([left.to_owned(), letter.to_string(), right.to_string()].concat());
         }
     }
+    result
 }
 
 #[cfg(test)]
@@ -334,45 +293,65 @@ mod tests {
     }
 
     #[test]
-    fn test_find_corrected_word() {
-        //        let word = String::from("inconvient");
-        //        let actual = find_corrected_word(word);
-        //        let expected = String::from("inconvenient");
-        //        assert_eq!(actual, expected);
+    fn test_correct() {
+        let mut stava = Stava {
+            words_w_count: HashMap::new(),
+        };
 
-        let word = String::from("arrainged");
-        let actual = find_corrected_word(word);
-        let expected = String::from("arranged");
+        stava.learn("spelling inconvenient bicycle corrected arranged poetry word");
+
+        // insert
+        let word = "speling";
+        let actual = stava.correct(word);
+        let expected = "spelling";
         assert_eq!(actual, expected);
 
-        let word = String::from("speling");
-        let actual = find_corrected_word(word);
-        let expected = String::from("spelling");
+        // insert 2
+        let word = "inconvient";
+        let actual = stava.correct(word);
+        let expected = "inconvenient";
         assert_eq!(actual, expected);
 
-        let word = String::from("korrectud");
-        let actual = find_corrected_word(word);
-        let expected = String::from("corrected");
+        // replace
+        let word = "bycyle";
+        let actual = stava.correct(word);
+        let expected = "bicycle";
         assert_eq!(actual, expected);
 
-        let word = String::from("peotry");
-        let actual = find_corrected_word(word);
-        let expected = String::from("poetry");
+        // replace 2
+        let word = "korrectud";
+        let actual = stava.correct(word);
+        let expected = "corrected";
         assert_eq!(actual, expected);
 
-        let word = String::from("peotryy");
-        let actual = find_corrected_word(word);
-        let expected = String::from("poetry");
+        // delete
+        let word = "arrainged";
+        let actual = stava.correct(word);
+        let expected = "arranged";
         assert_eq!(actual, expected);
 
-        let word = String::from("word");
-        let actual = find_corrected_word(word);
-        let expected = String::from("word");
+        // transpose
+        let word = "peotry";
+        let actual = stava.correct(word);
+        let expected = "poetry";
         assert_eq!(actual, expected);
 
-        let word = String::from("quintessential");
-        let actual = find_corrected_word(word);
-        let expected = String::from("quintessential");
+        // transpose + delete
+        let word = "peotryy";
+        let actual = stava.correct(word);
+        let expected = "poetry";
+        assert_eq!(actual, expected);
+
+        // known word
+        let word = "word";
+        let actual = stava.correct(word);
+        let expected = "word";
+        assert_eq!(actual, expected);
+
+        // unknown word
+        let word = "quintessential";
+        let actual = stava.correct(word);
+        let expected = "quintessential";
         assert_eq!(actual, expected);
     }
 }
