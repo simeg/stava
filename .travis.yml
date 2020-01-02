@@ -1,0 +1,15 @@
+language: rust
+rust:
+  - stable
+
+cache:
+  cargo: true
+
+before_script:
+  - rustup component add rustfmt --toolchain stable-x86_64-unknown-linux-gnu
+
+script: make ci
+
+notifications:
+  email:
+    on_success: never
