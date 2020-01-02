@@ -1,4 +1,4 @@
-.PHONY: check ci fmt lint test
+.PHONY: check ci fmt lint publish test
 
 BIN_NAME = stava
 CARGO = $(shell which cargo)
@@ -13,6 +13,9 @@ fmt:
 
 lint:
 	$(CARGO) fmt --all -- --check
+
+publish:
+	$(CARGO) publish
 
 test:
 	@$(CARGO) test --lib -- --nocapture
