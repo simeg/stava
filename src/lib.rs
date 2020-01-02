@@ -81,9 +81,7 @@ fn get_edits(word: String) -> HashSet<String> {
             replaces(splits.clone()),
             inserts(splits.clone()),
         ]
-        .concat()
-        .iter()
-        .cloned(),
+        .concat(),
     )
 }
 
@@ -289,6 +287,37 @@ mod tests {
         .into_iter()
         .map(String::from)
         .collect();
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_learn_word_freq() {
+        let mut stava = Stava {
+            words_w_count: HashMap::new(),
+        };
+
+        stava.learn("spelling spelling spelling bicycle");
+
+        let actual = stava.words_w_count;
+        let mut expected: HashMap<String, u32> = HashMap::new();
+        expected.insert("spelling".to_string(), 3);
+        expected.insert("bicycle".to_string(), 1);
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_learn_text_parse() {
+        let mut stava = Stava {
+            words_w_count: HashMap::new(),
+        };
+
+        stava.learn("(spelling) spelling, spelling. spelling! spelling22 [spelling]-^spelling#");
+
+        let actual = stava.words_w_count;
+        let mut expected: HashMap<String, u32> = HashMap::new();
+        expected.insert("spelling".to_string(), 7);
+
         assert_eq!(actual, expected);
     }
 
