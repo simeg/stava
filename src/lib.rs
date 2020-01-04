@@ -1,6 +1,9 @@
 #[macro_use]
 extern crate lazy_static;
 extern crate regex;
+#[cfg(test)]
+#[macro_use]
+extern crate include_dir;
 
 use regex::Regex;
 
@@ -388,5 +391,20 @@ mod tests {
         let actual = stava.correct(word);
         let expected = "quintessential";
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_default_word_file_is_available() {
+        use include_dir::Dir;
+
+        let assets_dir: Dir = include_dir!("src/assets");
+        let file_len = assets_dir
+            .get_file("words.txt")
+            .unwrap()
+            .contents_utf8()
+            .unwrap()
+            .len();
+        assert!(assets_dir.contains("words.txt"));
+        assert_eq!(file_len, 6479566);
     }
 }

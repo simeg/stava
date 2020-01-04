@@ -1,12 +1,13 @@
+extern crate stava;
 #[macro_use]
 extern crate clap;
-extern crate stava;
 #[macro_use]
 extern crate include_dir;
 
 use clap::{App, Arg};
 use include_dir::Dir;
 use stava::Stava;
+
 use std::collections::HashMap;
 use std::ffi::{OsStr, OsString};
 use std::fs;
