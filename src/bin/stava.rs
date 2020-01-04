@@ -1,8 +1,11 @@
 #[macro_use]
 extern crate clap;
 extern crate stava;
+#[macro_use]
+extern crate include_dir;
 
 use clap::{App, Arg};
+use include_dir::Dir;
 use stava::Stava;
 use std::collections::HashMap;
 use std::ffi::{OsStr, OsString};
@@ -12,7 +15,7 @@ use std::path::Path;
 static OPT_NAME_WORD: &str = "WORD";
 static OPT_NAME_FILES: &str = "FILES";
 
-static DEFAULT_WORDS_PATH: &str = "src/assets/words.txt";
+const ASSETS_DIR: Dir = include_dir!("src/assets");
 
 fn main() {
     let opt_word = Arg::with_name(OPT_NAME_WORD)
@@ -25,7 +28,6 @@ fn main() {
         .multiple(true)
         .required(false)
         .validator_os(exists_on_filesystem)
-        .default_value(DEFAULT_WORDS_PATH)
         .index(2);
 
     let matches = App::new("stava")
@@ -36,12 +38,13 @@ fn main() {
         .arg(opt_files)
         .get_matches();
 
+    let mut stava = Stava {
+        words_w_count: HashMap::new(),
+    };
+
+    // TODO: Make this logic prettier
     if let Some(files) = matches.values_of(OPT_NAME_FILES) {
         let paths: Vec<&Path> = files.map(Path::new).collect::<Vec<&Path>>();
-
-        let mut stava = Stava {
-            words_w_count: HashMap::new(),
-        };
 
         for file in paths {
             let words = fs::read_to_string(file).unwrap_or_else(|_| {
@@ -49,12 +52,21 @@ fn main() {
             });
             stava.learn(words.as_str());
         }
+    };
 
-        let word = matches.value_of(OPT_NAME_WORD).unwrap();
-        let corrected_word = stava.correct(word);
-
-        println!("{}", corrected_word);
+    if stava.words_w_count.is_empty() {
+        let words = ASSETS_DIR
+            .get_file("words.txt")
+            .unwrap()
+            .contents_utf8()
+            .unwrap();
+        stava.learn(words);
     }
+
+    let word = matches.value_of(OPT_NAME_WORD).unwrap();
+    let corrected_word = stava.correct(word);
+
+    println!("{}", corrected_word);
 }
 
 fn exists_on_filesystem(path: &OsStr) -> Result<(), OsString> {
