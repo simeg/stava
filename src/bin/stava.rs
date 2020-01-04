@@ -43,7 +43,6 @@ fn main() {
         words_w_count: HashMap::new(),
     };
 
-    // TODO: Make this logic prettier
     if let Some(files) = matches.values_of(OPT_NAME_FILES) {
         let paths: Vec<&Path> = files.map(Path::new).collect::<Vec<&Path>>();
 
@@ -53,9 +52,8 @@ fn main() {
             });
             stava.learn(words.as_str());
         }
-    };
-
-    if stava.words_w_count.is_empty() {
+    } else {
+        // Use default word file
         let words = ASSETS_DIR
             .get_file("words.txt")
             .unwrap()
