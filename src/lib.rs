@@ -29,7 +29,7 @@ impl Stava {
             *count += 1;
         }
 
-        self.words_w_count = words_with_count
+        self.words_w_count.extend(words_with_count)
     }
 
     pub fn correct(&mut self, word: &str) -> String {
