@@ -15,8 +15,8 @@ ARGS:
 
 * The default file contains ~30k unique words and is included in the crate
 * If needed you can pass in one or many of your own files
-* The files doesn't require any special formatting and special characters are allowed, `stava`
-knows how to ignore them
+* The files doesn't require any certain formatting (except whitespace separated words) and special
+characters are allowed, `stava` knows how to ignore them
 
 Currently `stava` only supports the English alphabet.
 
@@ -26,8 +26,17 @@ $ cargo install stava
 ```
 
 ## Usage
+**Use the default word file**
 ```bash
 $ stava bycyle
+bicycle
+```
+
+**Use your own files**
+```bash
+$ echo "bicycle" > words.txt
+$ echo "some other words" > words2.txt
+$ stava bycyle words.txt words2.txt
 bicycle
 ```
 
