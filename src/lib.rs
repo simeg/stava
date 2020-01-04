@@ -21,14 +21,14 @@ pub struct Stava {
 
 impl Stava {
     pub fn learn(&mut self, text: &str) {
-        let mut words_with_count: HashMap<String, u32> = HashMap::new();
         let re = Regex::new(r"[a-z]+").unwrap();
         for m in re.find_iter(&text.to_lowercase()) {
-            let count = words_with_count.entry(m.as_str().to_string()).or_insert(0);
+            let count = self
+                .words_w_count
+                .entry(m.as_str().to_string())
+                .or_insert(0);
             *count += 1;
         }
-
-        self.words_w_count.extend(words_with_count)
     }
 
     pub fn correct(&mut self, word: &str) -> String {
