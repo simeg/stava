@@ -10,7 +10,7 @@ USAGE:
 
 ARGS:
     <WORD>        Word to correct
-    <FILES>...    Files to learn words from [default: src/assets/words.txt]
+    <FILES>...    Files to learn words from
 ```
 
 * The default file contains ~30k unique words and is included in the crate
