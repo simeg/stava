@@ -37,14 +37,16 @@ fn main() {
         .get_matches();
 
     if let Some(files) = matches.values_of(OPT_NAME_FILES) {
-        let paths: Vec<&Path> = files.map(|file| Path::new(file)).collect::<Vec<&Path>>();
+        let paths: Vec<&Path> = files.map(Path::new).collect::<Vec<&Path>>();
 
         let mut stava = Stava {
             words_w_count: HashMap::new(),
         };
 
         for file in paths {
-            let words = fs::read_to_string(file).expect("Something went wrong reading the file");
+            let words = fs::read_to_string(file).unwrap_or_else(|_| {
+                panic!("Something went wrong reading the file: {}", file.display())
+            });
             stava.learn(words.as_str());
         }
 
@@ -57,7 +59,7 @@ fn main() {
 
 fn exists_on_filesystem(path: &OsStr) -> Result<(), OsString> {
     match path.to_str() {
-        None => Err(OsString::from("Could not convert input file path -> str")),
+        None => Err(OsString::from("Could not convert input file path -> &str")),
         Some(p) => {
             if Path::new(p).exists() {
                 return Ok(());

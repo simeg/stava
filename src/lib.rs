@@ -8,10 +8,9 @@ use std::collections::{HashMap, HashSet};
 use std::iter::FromIterator;
 
 lazy_static! {
-    static ref ENG_ALPHABET: Vec<String> = "abcdefghijklmnopqrstuvwxyz"
+    static ref ENG_ALPHABET: Vec<&'static str> = "abcdefghijklmnopqrstuvwxyz"
         .split("")
-        .filter(|l| l.len() > 0)
-        .map(String::from)
+        .filter(|l| !l.is_empty())
         .collect();
 }
 
@@ -79,7 +78,7 @@ fn get_edits(word: String) -> HashSet<String> {
             deletes(splits.clone()),
             transposes(splits.clone()),
             replaces(splits.clone()),
-            inserts(splits.clone()),
+            inserts(splits),
         ]
         .concat(),
     )
@@ -129,7 +128,14 @@ fn replaces(words: Vec<(String, String)>) -> Vec<String> {
     for (left, right) in words {
         if !right.is_empty() {
             for letter in ENG_ALPHABET.iter() {
-                result.push([left.to_owned(), letter.to_string(), right[1..].to_string()].concat());
+                result.push(
+                    [
+                        left.to_owned(),
+                        (*letter).to_string(),
+                        right[1..].to_string(),
+                    ]
+                    .concat(),
+                );
             }
         }
     }
@@ -140,7 +146,7 @@ fn inserts(words: Vec<(String, String)>) -> Vec<String> {
     let mut result = Vec::new();
     for (left, right) in words {
         for letter in ENG_ALPHABET.iter() {
-            result.push([left.to_owned(), letter.to_string(), right.to_string()].concat());
+            result.push([left.to_owned(), (*letter).to_string(), right.to_string()].concat());
         }
     }
     result
