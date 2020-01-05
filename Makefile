@@ -8,6 +8,9 @@ check:
 
 ci: lint check test
 
+clippy:
+	$(CARGO) clippy
+
 fmt:
 	@$(CARGO) fmt
 
