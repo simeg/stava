@@ -1,4 +1,4 @@
-.PHONY: check ci fmt install lint publish release test
+.PHONY: check ci clippy fmt install lint publish release test
 
 BIN_NAME = stava
 CARGO = $(shell which cargo)
