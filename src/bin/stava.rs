@@ -15,6 +15,7 @@ use std::path::Path;
 
 static OPT_NAME_WORD: &str = "WORD";
 static OPT_NAME_FILES: &str = "FILES";
+static FLAG_INC_DEFAULT_WORDS: &str = "flag_inc_default_words";
 
 const ASSETS_DIR: Dir = include_dir!("src/assets");
 
@@ -31,12 +32,18 @@ fn main() {
         .validator_os(exists_on_filesystem)
         .index(2);
 
+    let flag_inc_default_words = Arg::with_name(FLAG_INC_DEFAULT_WORDS)
+        .help("Include default set of words (default: false)")
+        .short("d")
+        .long("default");
+
     let matches = App::new("stava")
         .version(crate_version!())
         .author(crate_authors!())
         .about(crate_description!())
         .arg(opt_word)
         .arg(opt_files)
+        .arg(flag_inc_default_words)
         .get_matches();
 
     let mut stava = Stava {
@@ -44,6 +51,10 @@ fn main() {
     };
 
     if let Some(files) = matches.values_of(OPT_NAME_FILES) {
+        if matches.is_present(FLAG_INC_DEFAULT_WORDS) {
+            stava.learn(get_default_words());
+        }
+
         let paths: Vec<&Path> = files.map(Path::new).collect::<Vec<&Path>>();
 
         for file in paths {
@@ -53,19 +64,22 @@ fn main() {
             stava.learn(words.as_str());
         }
     } else {
-        // Use default word file
-        let words = ASSETS_DIR
-            .get_file("words.txt")
-            .unwrap()
-            .contents_utf8()
-            .unwrap();
-        stava.learn(words);
+        // No files provided by user - use default word file
+        stava.learn(get_default_words());
     }
 
     let word = matches.value_of(OPT_NAME_WORD).unwrap();
     let corrected_word = stava.correct(word);
 
     println!("{}", corrected_word);
+}
+
+fn get_default_words() -> &'static str {
+    ASSETS_DIR
+        .get_file("words.txt")
+        .unwrap()
+        .contents_utf8()
+        .unwrap()
 }
 
 fn exists_on_filesystem(path: &OsStr) -> Result<(), OsString> {
