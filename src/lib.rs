@@ -22,6 +22,13 @@ pub struct Stava {
     pub words_w_count: HashMap<String, u32>,
 }
 
+#[derive(Debug, PartialEq)]
+pub struct StavaResult {
+    pub word: String,
+    // If the word was corrected
+    pub was_corrected: bool,
+}
+
 impl Stava {
     pub fn learn(&mut self, text: &str) {
         let re = Regex::new(r"[a-z]+").unwrap();
@@ -34,10 +41,13 @@ impl Stava {
         }
     }
 
-    pub fn correct(&mut self, word: &str) -> String {
+    pub fn correct(&mut self, word: &str) -> StavaResult {
         // Word is known so we return it
         if self.words_w_count.contains_key(word) {
-            return word.to_string();
+            return StavaResult {
+                word: word.to_string(),
+                was_corrected: false,
+            };
         }
 
         let mut candidates: HashMap<u32, String> = HashMap::new();
@@ -52,7 +62,10 @@ impl Stava {
 
         // Return candidate if found in edits
         if let Some(candidate) = candidates.iter().max_by_key(|&entry| entry.0) {
-            return candidate.1.to_string();
+            return StavaResult {
+                word: candidate.1.to_string(),
+                was_corrected: true,
+            };
         }
 
         // Add additional edits based on first edited words
@@ -66,11 +79,17 @@ impl Stava {
 
         // Return candidate if found in edits
         if let Some(candidate) = candidates.iter().max_by_key(|&entry| entry.0) {
-            return candidate.1.to_string();
+            return StavaResult {
+                word: candidate.1.to_string(),
+                was_corrected: true,
+            };
         }
 
-        // No correction was found - return input word
-        word.to_string()
+        // No correction was found
+        StavaResult {
+            word: word.to_string(),
+            was_corrected: false,
+        }
     }
 }
 
@@ -341,55 +360,82 @@ mod tests {
         // insert
         let word = "speling";
         let actual = stava.correct(word);
-        let expected = "spelling";
+        let expected = StavaResult {
+            word: "spelling".to_string(),
+            was_corrected: true,
+        };
         assert_eq!(actual, expected);
 
         // insert 2
         let word = "inconvient";
         let actual = stava.correct(word);
-        let expected = "inconvenient";
+        let expected = StavaResult {
+            word: "inconvenient".to_string(),
+            was_corrected: true,
+        };
         assert_eq!(actual, expected);
 
         // replace
         let word = "bycyle";
         let actual = stava.correct(word);
-        let expected = "bicycle";
+        let expected = StavaResult {
+            word: "bicycle".to_string(),
+            was_corrected: true,
+        };
         assert_eq!(actual, expected);
 
         // replace 2
         let word = "korrectud";
         let actual = stava.correct(word);
-        let expected = "corrected";
+        let expected = StavaResult {
+            word: "corrected".to_string(),
+            was_corrected: true,
+        };
         assert_eq!(actual, expected);
 
         // delete
         let word = "arrainged";
         let actual = stava.correct(word);
-        let expected = "arranged";
+        let expected = StavaResult {
+            word: "arranged".to_string(),
+            was_corrected: true,
+        };
         assert_eq!(actual, expected);
 
         // transpose
         let word = "peotry";
         let actual = stava.correct(word);
-        let expected = "poetry";
+        let expected = StavaResult {
+            word: "poetry".to_string(),
+            was_corrected: true,
+        };
         assert_eq!(actual, expected);
 
         // transpose + delete
         let word = "peotryy";
         let actual = stava.correct(word);
-        let expected = "poetry";
+        let expected = StavaResult {
+            word: "poetry".to_string(),
+            was_corrected: true,
+        };
         assert_eq!(actual, expected);
 
         // known word
         let word = "word";
         let actual = stava.correct(word);
-        let expected = "word";
+        let expected = StavaResult {
+            word: "word".to_string(),
+            was_corrected: false,
+        };
         assert_eq!(actual, expected);
 
         // unknown word
         let word = "quintessential";
         let actual = stava.correct(word);
-        let expected = "quintessential";
+        let expected = StavaResult {
+            word: "quintessential".to_string(),
+            was_corrected: false,
+        };
         assert_eq!(actual, expected);
     }
 

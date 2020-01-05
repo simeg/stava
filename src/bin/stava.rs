@@ -6,7 +6,7 @@ extern crate include_dir;
 
 use clap::{App, Arg};
 use include_dir::Dir;
-use stava::Stava;
+use stava::{Stava, StavaResult};
 
 use std::collections::HashMap;
 use std::ffi::{OsStr, OsString};
@@ -84,28 +84,24 @@ fn main() {
     }
 
     let word = matches.value_of(OPT_NAME_WORD).unwrap();
-    let corrected_word = stava.correct(word);
-
-    let has_been_corrected = word.ne(corrected_word.as_str());
+    let result = stava.correct(word);
 
     if matches.is_present(FLAG_ONLY_EXIT_CODE) {
-        exit_with_code(has_been_corrected)
+        exit_with_code(result)
     } else {
-        println!("{}", corrected_word);
+        println!("{}", result.word);
 
         if matches.is_present(FLAG_RETURN_EXIT_CODE) {
-            exit_with_code(has_been_corrected)
+            exit_with_code(result)
         }
     }
 }
 
-fn exit_with_code(has_been_corrected: bool) -> ! {
-    // Corrected word found
-    if has_been_corrected {
+fn exit_with_code(result: StavaResult) -> ! {
+    if result.was_corrected {
         exit(1)
     }
 
-    // No corrected word was found
     exit(0)
 }
 
