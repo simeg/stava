@@ -57,7 +57,7 @@ $ echo $?
 ```
 
 ```bash
-$ stava --only-exit-code bycycle  # Word is corrected so exit code = 1
+$ stava --exit-code-only bycycle  # Word is corrected so exit code = 1
 $ echo $?
 1
 ```
