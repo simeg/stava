@@ -12,10 +12,12 @@ use std::collections::HashMap;
 use std::ffi::{OsStr, OsString};
 use std::fs;
 use std::path::Path;
+use std::process::exit;
 
 static OPT_NAME_WORD: &str = "WORD";
 static OPT_NAME_FILES: &str = "FILES";
 static FLAG_INC_DEFAULT_WORDS: &str = "flag_inc_default_words";
+static FLAG_RETURN_EXIT_CODE: &str = "flag_return_exit_code";
 
 const ASSETS_DIR: Dir = include_dir!("src/assets");
 
@@ -37,6 +39,11 @@ fn main() {
         .short("d")
         .long("default");
 
+    let flag_return_exit_code = Arg::with_name(FLAG_RETURN_EXIT_CODE)
+        .help("Exit with 1 if word is not spelled correctly, otherwise 0 (default: false)")
+        .short("e")
+        .long("exit-code");
+
     let matches = App::new("stava")
         .version(crate_version!())
         .author(crate_authors!())
@@ -44,6 +51,7 @@ fn main() {
         .arg(opt_word)
         .arg(opt_files)
         .arg(flag_inc_default_words)
+        .arg(flag_return_exit_code)
         .get_matches();
 
     let mut stava = Stava {
@@ -72,6 +80,16 @@ fn main() {
     let corrected_word = stava.correct(word);
 
     println!("{}", corrected_word);
+
+    if matches.is_present(FLAG_RETURN_EXIT_CODE) {
+        // No corrected word was found
+        if word.eq(corrected_word.as_str()) {
+            exit(0)
+        }
+
+        // Corrected word found
+        exit(1)
+    }
 }
 
 fn get_default_words() -> &'static str {
