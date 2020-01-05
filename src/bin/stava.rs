@@ -18,6 +18,7 @@ static OPT_NAME_WORD: &str = "WORD";
 static OPT_NAME_FILES: &str = "FILES";
 static FLAG_INC_DEFAULT_WORDS: &str = "flag_inc_default_words";
 static FLAG_RETURN_EXIT_CODE: &str = "flag_return_exit_code";
+static FLAG_ONLY_EXIT_CODE: &str = "flag_only_exit_code";
 
 const ASSETS_DIR: Dir = include_dir!("src/assets");
 
@@ -44,6 +45,11 @@ fn main() {
         .short("e")
         .long("exit-code");
 
+    let flag_only_exit_code = Arg::with_name(FLAG_ONLY_EXIT_CODE)
+        .help("Only return exit code and not corrected word (default: false)")
+        .short("o")
+        .long("only-exit-code");
+
     let matches = App::new("stava")
         .version(crate_version!())
         .author(crate_authors!())
@@ -52,6 +58,7 @@ fn main() {
         .arg(opt_files)
         .arg(flag_inc_default_words)
         .arg(flag_return_exit_code)
+        .arg(flag_only_exit_code)
         .get_matches();
 
     let mut stava = Stava {
@@ -79,17 +86,27 @@ fn main() {
     let word = matches.value_of(OPT_NAME_WORD).unwrap();
     let corrected_word = stava.correct(word);
 
-    println!("{}", corrected_word);
+    let has_been_corrected = word.ne(corrected_word.as_str());
 
-    if matches.is_present(FLAG_RETURN_EXIT_CODE) {
-        // No corrected word was found
-        if word.eq(corrected_word.as_str()) {
-            exit(0)
+    if matches.is_present(FLAG_ONLY_EXIT_CODE) {
+        exit_with_code(has_been_corrected)
+    } else {
+        println!("{}", corrected_word);
+
+        if matches.is_present(FLAG_RETURN_EXIT_CODE) {
+            exit_with_code(has_been_corrected)
         }
+    }
+}
 
-        // Corrected word found
+fn exit_with_code(has_been_corrected: bool) -> ! {
+    // Corrected word found
+    if has_been_corrected {
         exit(1)
     }
+
+    // No corrected word was found
+    exit(0)
 }
 
 fn get_default_words() -> &'static str {
