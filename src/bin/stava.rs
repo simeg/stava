@@ -48,7 +48,7 @@ fn main() {
     let flag_only_exit_code = Arg::with_name(FLAG_ONLY_EXIT_CODE)
         .help("Only return exit code and not corrected word (default: false)")
         .short("o")
-        .long("only-exit-code");
+        .long("exit-code-only");
 
     let matches = App::new("stava")
         .version(crate_version!())
