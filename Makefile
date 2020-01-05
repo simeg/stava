@@ -27,4 +27,4 @@ release:
 	@$(CARGO) build --release
 
 test:
-	@$(CARGO) test --lib -- --nocapture
+	@$(CARGO) test -- --nocapture
