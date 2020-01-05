@@ -28,7 +28,7 @@ $ cargo install stava
 ## Usage
 **Use the default word file**
 ```bash
-$ stava bycyle
+$ stava bycycle
 bicycle
 ```
 
@@ -36,8 +36,30 @@ bicycle
 ```bash
 $ echo "bicycle" > words.txt
 $ echo "some other words" > words2.txt
-$ stava bycyle words.txt words2.txt
+$ stava bycycle words.txt words2.txt
 bicycle
+```
+
+**Use your own files and the default set of words**
+```bash
+$ echo "bicycle" > words.txt
+$ echo "some other words" > words2.txt
+$ stava --default mankey words.txt words2.txt
+monkey
+```
+
+**With exit code**
+```bash
+$ stava --exit-code bycycle  # Word is corrected so exit code = 1
+bicycle
+$ echo $?
+1
+```
+
+```bash
+$ stava --only-exit-code bycycle  # Word is corrected so exit code = 1
+$ echo $?
+1
 ```
 
 * If multiple candidates are found, the one occurring the most in the provided files are returned
