@@ -1,6 +1,6 @@
 [package]
 name = "stava"
-version = "0.4.1"
+version = "0.5.0"
 description = "Spell checker"
 authors = ["Simon Egersand <s.egersand@gmail.com>"]
 
