@@ -6,7 +6,7 @@ Rust implementation of [Peter Norvig's Spell Corrector](http://norvig.com/spell-
 
 ```
 USAGE:
-    stava <WORD> [FILES]...
+    stava [FLAGS] <WORD> [FILES]...
 
 FLAGS:
     -d, --default           Include default set of words (default: false)
