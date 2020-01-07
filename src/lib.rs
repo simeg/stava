@@ -51,7 +51,7 @@ impl Stava {
         }
 
         let mut candidates: HashMap<u32, String> = HashMap::new();
-        let edits = get_edits(word.to_string());
+        let edits = self.get_edits(word.to_string());
 
         // Add edited words as candidates
         for edit in &edits {
@@ -70,7 +70,7 @@ impl Stava {
 
         // Add additional edits based on first edited words
         for edit in &edits {
-            for word in get_edits(edit.to_string()) {
+            for word in self.get_edits(edit.to_string()) {
                 if let Some(count) = self.words_w_count.get(&word) {
                     candidates.insert(*count, word);
                 }
@@ -91,87 +91,87 @@ impl Stava {
             was_corrected: false,
         }
     }
-}
 
-fn get_edits(word: String) -> HashSet<String> {
-    let splits = splits(word);
-    HashSet::from_iter(
-        [
-            deletes(splits.clone()),
-            transposes(splits.clone()),
-            replaces(splits.clone()),
-            inserts(splits),
-        ]
-        .concat(),
-    )
-}
-
-fn splits(word: String) -> Vec<(String, String)> {
-    let mut result = Vec::with_capacity(word.len() + 1);
-    let range = 0..result.capacity();
-    for i in range {
-        let left = String::from(&word[..i]);
-        let right = String::from(&word[i..]);
-        result.push((left, right));
+    fn get_edits(&self, word: String) -> HashSet<String> {
+        let splits = self.splits(word);
+        HashSet::from_iter(
+            [
+                self.deletes(splits.clone()),
+                self.transposes(splits.clone()),
+                self.replaces(splits.clone()),
+                self.inserts(splits),
+            ]
+            .concat(),
+        )
     }
-    result
-}
 
-fn deletes(words: Vec<(String, String)>) -> Vec<String> {
-    let mut result = Vec::with_capacity(words.len() - 1);
-    for (left, right) in words {
-        if !right.is_empty() {
-            result.push([left.to_owned(), right[1..].to_string()].concat());
+    fn splits(&self, word: String) -> Vec<(String, String)> {
+        let mut result = Vec::with_capacity(word.len() + 1);
+        let range = 0..result.capacity();
+        for i in range {
+            let left = String::from(&word[..i]);
+            let right = String::from(&word[i..]);
+            result.push((left, right));
         }
+        result
     }
-    result
-}
 
-fn transposes(words: Vec<(String, String)>) -> Vec<String> {
-    let mut result = Vec::with_capacity(words.len() - 2);
-    for (left, right) in words {
-        if right.len() > 1 {
-            result.push(
-                [
-                    left.to_owned(),
-                    right.chars().nth(1).unwrap().to_string(),
-                    right.chars().nth(0).unwrap().to_string(),
-                    right[2..].to_string(),
-                ]
-                .concat(),
-            );
+    fn deletes(&self, words: Vec<(String, String)>) -> Vec<String> {
+        let mut result = Vec::with_capacity(words.len() - 1);
+        for (left, right) in words {
+            if !right.is_empty() {
+                result.push([left.to_owned(), right[1..].to_string()].concat());
+            }
         }
+        result
     }
-    result
-}
 
-fn replaces(words: Vec<(String, String)>) -> Vec<String> {
-    let mut result = Vec::new();
-    for (left, right) in words {
-        if !right.is_empty() {
-            for letter in ENG_ALPHABET.iter() {
+    fn transposes(&self, words: Vec<(String, String)>) -> Vec<String> {
+        let mut result = Vec::with_capacity(words.len() - 2);
+        for (left, right) in words {
+            if right.len() > 1 {
                 result.push(
                     [
                         left.to_owned(),
-                        (*letter).to_string(),
-                        right[1..].to_string(),
+                        right.chars().nth(1).unwrap().to_string(),
+                        right.chars().nth(0).unwrap().to_string(),
+                        right[2..].to_string(),
                     ]
                     .concat(),
                 );
             }
         }
+        result
     }
-    result
-}
 
-fn inserts(words: Vec<(String, String)>) -> Vec<String> {
-    let mut result = Vec::new();
-    for (left, right) in words {
-        for letter in ENG_ALPHABET.iter() {
-            result.push([left.to_owned(), (*letter).to_string(), right.to_string()].concat());
+    fn replaces(&self, words: Vec<(String, String)>) -> Vec<String> {
+        let mut result = Vec::new();
+        for (left, right) in words {
+            if !right.is_empty() {
+                for letter in ENG_ALPHABET.iter() {
+                    result.push(
+                        [
+                            left.to_owned(),
+                            (*letter).to_string(),
+                            right[1..].to_string(),
+                        ]
+                        .concat(),
+                    );
+                }
+            }
         }
+        result
     }
-    result
+
+    fn inserts(&self, words: Vec<(String, String)>) -> Vec<String> {
+        let mut result = Vec::new();
+        for (left, right) in words {
+            for letter in ENG_ALPHABET.iter() {
+                result.push([left.to_owned(), (*letter).to_string(), right.to_string()].concat());
+            }
+        }
+        result
+    }
 }
 
 #[cfg(test)]
@@ -180,7 +180,10 @@ mod tests {
 
     #[test]
     fn test_splits() {
-        let actual = splits(String::from("monkey"));
+        let stava = Stava {
+            words_w_count: HashMap::new(),
+        };
+        let actual = stava.splits(String::from("monkey"));
         let expected: Vec<(String, String)> = vec![
             (String::from(""), String::from("monkey")),
             (String::from("m"), String::from("onkey")),
@@ -195,6 +198,9 @@ mod tests {
 
     #[test]
     fn test_deletes() {
+        let stava = Stava {
+            words_w_count: HashMap::new(),
+        };
         let splits: Vec<(String, String)> = vec![
             (String::from(""), String::from("monkey")),
             (String::from("m"), String::from("onkey")),
@@ -204,7 +210,7 @@ mod tests {
             (String::from("monke"), String::from("y")),
             (String::from("monkey"), String::from("")),
         ];
-        let actual = deletes(splits);
+        let actual = stava.deletes(splits);
         let expected: Vec<String> = vec![
             String::from("onkey"),
             String::from("mnkey"),
@@ -218,6 +224,9 @@ mod tests {
 
     #[test]
     fn test_transposes() {
+        let stava = Stava {
+            words_w_count: HashMap::new(),
+        };
         let splits: Vec<(String, String)> = vec![
             (String::from(""), String::from("monkey")),
             (String::from("m"), String::from("onkey")),
@@ -227,7 +236,7 @@ mod tests {
             (String::from("monke"), String::from("y")),
             (String::from("monkey"), String::from("")),
         ];
-        let actual = transposes(splits);
+        let actual = stava.transposes(splits);
         let expected: Vec<String> = vec!["omnkey", "mnokey", "mokney", "moneky", "monkye"]
             .into_iter()
             .map(String::from)
@@ -237,6 +246,9 @@ mod tests {
 
     #[test]
     fn test_replaces() {
+        let stava = Stava {
+            words_w_count: HashMap::new(),
+        };
         let splits: Vec<(String, String)> = vec![
             (String::from(""), String::from("monkey")),
             (String::from("m"), String::from("onkey")),
@@ -246,7 +258,7 @@ mod tests {
             (String::from("monke"), String::from("y")),
             (String::from("monkey"), String::from("")),
         ];
-        let actual = replaces(splits);
+        let actual = stava.replaces(splits);
         let expected: Vec<String> = vec![
             "aonkey", "bonkey", "conkey", "donkey", "eonkey", "fonkey", "gonkey", "honkey",
             "ionkey", "jonkey", "konkey", "lonkey", "monkey", "nonkey", "oonkey", "ponkey",
@@ -277,6 +289,9 @@ mod tests {
 
     #[test]
     fn test_inserts() {
+        let stava = Stava {
+            words_w_count: HashMap::new(),
+        };
         let splits: Vec<(String, String)> = vec![
             (String::from(""), String::from("monkey")),
             (String::from("m"), String::from("onkey")),
@@ -286,7 +301,7 @@ mod tests {
             (String::from("monke"), String::from("y")),
             (String::from("monkey"), String::from("")),
         ];
-        let actual = inserts(splits);
+        let actual = stava.inserts(splits);
         let expected: Vec<String> = vec![
             "amonkey", "bmonkey", "cmonkey", "dmonkey", "emonkey", "fmonkey", "gmonkey", "hmonkey",
             "imonkey", "jmonkey", "kmonkey", "lmonkey", "mmonkey", "nmonkey", "omonkey", "pmonkey",
