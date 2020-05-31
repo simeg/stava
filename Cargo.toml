@@ -3,6 +3,8 @@ name = "stava"
 version = "0.6.1"
 description = "CLI spell checker"
 authors = ["Simon Egersand <s.egersand@gmail.com>"]
+categories = ["command-line-interface", "command-line-utilities"]
+keywords = ["cli", "spelling", "terminal"]
 
 repository = "https://github.com/simeg/stava"
 homepage = "https://github.com/simeg/stava"
