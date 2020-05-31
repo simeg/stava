@@ -134,7 +134,7 @@ impl Stava {
                     [
                         left.to_owned(),
                         right.chars().nth(1).unwrap().to_string(),
-                        right.chars().nth(0).unwrap().to_string(),
+                        right.chars().next().unwrap().to_string(),
                         right[2..].to_string(),
                     ]
                     .concat(),
