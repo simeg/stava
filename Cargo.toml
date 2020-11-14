@@ -1,6 +1,6 @@
 [package]
 name = "stava"
-version = "0.6.1"
+version = "0.6.2"
 description = "CLI spell checker"
 authors = ["Simon Egersand <s.egersand@gmail.com>"]
 categories = ["command-line-interface", "command-line-utilities"]
