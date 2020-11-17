@@ -18,6 +18,10 @@ include = [
 	"README.md"
 ]
 
+[badges]
+travis-ci = { repository = "simeg/stava" }
+codecov = { repository = "simeg/stava", branch = "master", service = "github" }
+
 [dependencies]
 clap = { version = "2.33.1", default-features = false }
 lazy_static = "1.4.0"
