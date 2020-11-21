@@ -24,6 +24,7 @@ pub struct Stava {
 
 #[derive(Debug, PartialEq)]
 pub struct StavaResult {
+    // The corrected word. If it was not corrected then the input word is returned
     pub word: String,
     // If the word was corrected
     pub was_corrected: bool,
