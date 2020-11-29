@@ -13,7 +13,7 @@ use std::iter::FromIterator;
 lazy_static! {
     static ref ENG_ALPHABET: Vec<&'static str> = "abcdefghijklmnopqrstuvwxyz"
         .split("")
-        .filter(|l| !l.is_empty())
+        .filter(|&l| !l.is_empty())
         .collect();
 }
 
@@ -133,7 +133,7 @@ impl Stava {
             if right.len() > 1 {
                 result.push(
                     [
-                        left.to_owned(),
+                        &left,
                         right.chars().nth(1).unwrap().to_string().as_str(),
                         right.chars().next().unwrap().to_string().as_str(),
                         &right[2..],
@@ -150,7 +150,7 @@ impl Stava {
         for (left, right) in words {
             if !right.is_empty() {
                 for letter in ENG_ALPHABET.iter() {
-                    result.push([left.to_owned(), (*letter), &right[1..]].concat());
+                    result.push([&left, &letter, &right[1..]].concat());
                 }
             }
         }
@@ -158,10 +158,10 @@ impl Stava {
     }
 
     fn inserts(&self, words: &[(&str, &str)]) -> Vec<String> {
-        let mut result = Vec::new();
+        let mut result = Vec::with_capacity(words.len() * ENG_ALPHABET.len());
         for (left, right) in words {
             for letter in ENG_ALPHABET.iter() {
-                result.push([left, (*letter), right].concat());
+                result.push([left, *letter, right].concat());
             }
         }
         result

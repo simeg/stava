@@ -99,7 +99,7 @@ mod cli {
 
         cmd.assert()
             .failure()
-            .stderr(contains("File not found [some_non_existing_file]"));
+            .stderr(contains("File not found [\"some_non_existing_file\"]"));
         Ok(())
     }
 

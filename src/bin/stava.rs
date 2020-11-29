@@ -14,11 +14,11 @@ use std::fs;
 use std::path::Path;
 use std::process::exit;
 
-static OPT_NAME_WORD: &str = "WORD";
-static OPT_NAME_FILES: &str = "FILES";
-static FLAG_INC_DEFAULT_WORDS: &str = "flag_inc_default_words";
-static FLAG_RETURN_EXIT_CODE: &str = "flag_return_exit_code";
-static FLAG_ONLY_EXIT_CODE: &str = "flag_only_exit_code";
+const OPT_NAME_WORD: &str = "WORD";
+const OPT_NAME_FILES: &str = "FILES";
+const FLAG_INC_DEFAULT_WORDS: &str = "flag_inc_default_words";
+const FLAG_RETURN_EXIT_CODE: &str = "flag_return_exit_code";
+const FLAG_ONLY_EXIT_CODE: &str = "flag_only_exit_code";
 
 const ASSETS_DIR: Dir = include_dir!("src/assets");
 
@@ -73,9 +73,8 @@ fn main() {
         let paths: Vec<&Path> = files.map(Path::new).collect::<Vec<&Path>>();
 
         for file in paths {
-            let words = fs::read_to_string(file).unwrap_or_else(|_| {
-                panic!("Something went wrong reading the file: {}", file.display())
-            });
+            let words = fs::read_to_string(file)
+                .unwrap_or_else(|_| panic!("Could not read the file: {}", file.display()));
             stava.learn(words.as_str());
         }
     } else {
@@ -108,22 +107,13 @@ fn exit_with_code(result: StavaResult) -> ! {
 fn get_default_words() -> &'static str {
     ASSETS_DIR
         .get_file("words.txt")
-        .unwrap()
-        .contents_utf8()
-        .unwrap()
+        .and_then(|file| file.contents_utf8())
+        .unwrap_or_else(|| panic!("Could not get default words"))
 }
 
 fn exists_on_filesystem(path: &OsStr) -> Result<(), OsString> {
-    match path.to_str() {
-        None => Err(OsString::from("Could not convert input file path -> &str")),
-        Some(p) => {
-            if Path::new(p).exists() {
-                return Ok(());
-            }
-            Err(OsString::from(format!(
-                "File not found [{}]",
-                path.to_str().unwrap()
-            )))
-        }
+    match Some(path).map(Path::new).map(Path::exists).unwrap_or(false) {
+        true => Ok(()),
+        false => Err(OsString::from(format!("File not found [{:?}]", path))),
     }
 }
