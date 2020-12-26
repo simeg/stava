@@ -1,4 +1,4 @@
-# stava [![Crate Status](https://img.shields.io/crates/v/stava.svg)](https://crates.io/crates/stava) [![Build Status](https://travis-ci.com/simeg/stava.svg?branch=master)](https://travis-ci.com/simeg/stava) [![codecov](https://codecov.io/gh/simeg/stava/branch/master/graph/badge.svg)](https://codecov.io/gh/simeg/stava)
+# stava [![Crate Status](https://img.shields.io/crates/v/stava.svg)](https://crates.io/crates/stava) ![CI](https://github.com/simeg/stava/workflows/CI/badge.svg) [![codecov](https://codecov.io/gh/simeg/stava/branch/master/graph/badge.svg)](https://codecov.io/gh/simeg/stava)
 
 CLI tool to perform spell checking.
 
