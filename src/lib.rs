@@ -133,7 +133,7 @@ impl Stava {
             if right.len() > 1 {
                 result.push(
                     [
-                        &left,
+                        left,
                         right.chars().nth(1).unwrap().to_string().as_str(),
                         right.chars().next().unwrap().to_string().as_str(),
                         &right[2..],
@@ -150,7 +150,7 @@ impl Stava {
         for (left, right) in words {
             if !right.is_empty() {
                 for letter in ENG_ALPHABET.iter() {
-                    result.push([&left, &letter, &right[1..]].concat());
+                    result.push([left, letter, &right[1..]].concat());
                 }
             }
         }
@@ -436,14 +436,14 @@ mod tests {
     fn test_default_word_file_is_available() {
         use include_dir::Dir;
 
-        let assets_dir: Dir = include_dir!("src/assets");
-        let file_len = assets_dir
+        static ASSETS_DIR: Dir<'_> = include_dir!("src/assets");
+        let file_len = ASSETS_DIR
             .get_file("words.txt")
             .unwrap()
             .contents_utf8()
             .unwrap()
             .len();
-        assert!(assets_dir.contains("words.txt"));
+        assert!(&ASSETS_DIR.contains("words.txt"));
         assert_eq!(file_len, 6479566);
     }
 }
