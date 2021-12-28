@@ -11,7 +11,7 @@ homepage = "https://github.com/simeg/stava"
 documentation = "https://github.com/simeg/stava/blob/master/README.md"
 readme = "README.md"
 license = "MIT"
-edition = "2018"
+edition = "2021"
 include = [
 	"src/**/*",
 	"Cargo.toml",
