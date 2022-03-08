@@ -19,12 +19,12 @@ include = [
 ]
 
 [dependencies]
-clap = { version = "2.34.0", default-features = false }
+clap = { version = "3.1.6", default-features = false, features = ["std", "cargo"] }
 lazy_static = "1.4.0"
-regex = { version = "1.5.4", default-features = false, features = ["std", "perf"] }
+regex = { version = "1.5.5", default-features = false, features = ["std", "perf"] }
 include_dir = "0.7.2"
 
 [dev-dependencies]
-assert_cmd = "2.0.2"
-predicates = "2.1.0"
-tempfile = "3.2.0"
+assert_cmd = "2.0.4"
+predicates = "2.1.1"
+tempfile = "3.3.0"
